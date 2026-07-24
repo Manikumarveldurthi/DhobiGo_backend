@@ -8,7 +8,7 @@ spring:
     property-naming-strategy: LOWER_CAMEL_CASE   # matches frontend field names exactly
 
 server:
-  port: 8081
+  port: ${PORT:8081}
 
 # JWT secret — override with env var JWT_SECRET in real deployments.
 # This default is only for local dev; never ship this value to production.
