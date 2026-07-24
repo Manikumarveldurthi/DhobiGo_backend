@@ -1,0 +1,123 @@
+spring:
+  application:
+    name: dhobigo-backend
+  profiles:
+    active: prod
+
+  jackson:
+    property-naming-strategy: LOWER_CAMEL_CASE   # matches frontend field names exactly
+
+server:
+  port: 8081
+
+# JWT secret — override with env var JWT_SECRET in real deployments.
+# This default is only for local dev; never ship this value to production.
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-change-me-before-deploying-please-1234567890}
+    expiration-ms: 86400000   # 24 hours
+
+  # WhatsApp notifications via Twilio — disabled by default (logs instead
+  # of sending). See WhatsAppNotificationService.java for setup steps.
+  whatsapp:
+    enabled: ${WHATSAPP_ENABLED:true}
+    account-sid: ${WHATSAPP_ACCOUNT_SID:YOUR_TWILIO_ACCOUNT_SID}
+    auth-token: ${WHATSAPP_AUTH_TOKEN:YOUR_TWILIO_AUTH_TOKEN}
+    from-number: ${WHATSAPP_FROM_NUMBER:whatsapp:+14155238886}
+    default-country-code: ${WHATSAPP_DEFAULT_COUNTRY_CODE:+91}
+
+  # Google Sign-In — see GoogleAuthProperties.java for setup steps.
+  # Free, no business verification needed (unlike WhatsApp).
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:YOUR_GOOGLE_CLIENT_ID}
+
+  # Phone-number OTP login via Twilio Verify — reuses the WHATSAPP_ACCOUNT_SID
+  # / WHATSAPP_AUTH_TOKEN above (same Twilio account), just needs one more
+  # free Service SID. See TwilioVerifyProperties.java for setup steps.
+  twilio-verify:
+    enabled: ${TWILIO_VERIFY_ENABLED:true}
+    service-sid: ${TWILIO_VERIFY_SERVICE_SID:YOUR_VERIFY_SERVICE_SID}
+
+  # Web Push (browser notifications). Subscription storage always works;
+  # actually sending is a logging stub until you wire in a web-push library
+  # and real VAPID keys — see PushProperties.java / PushNotificationService.java.
+  push:
+    enabled: ${PUSH_ENABLED:true}
+    vapid-public-key: ${PUSH_VAPID_PUBLIC_KEY:BG4uH_67CeSzkHrzCDkl9tgNIeQyuqZz5AguMS9S0beWrkgX4QeMVbyOd76_8WEX7FNGkVby_dfNkjTAtKHa2SA}
+    vapid-private-key: ${PUSH_VAPID_PRIVATE_KEY:jodoZvtRBosdB1eWA3qOtk1kxffhSGSFiJ3gom6jcQc}
+    vapid-subject: ${PUSH_VAPID_SUBJECT:mailto:manikumar0459@gmail.com}
+
+  # Real payments (UPI/Card) via Razorpay — disabled by default (falls back
+  # to demo mode: order is placed directly, no real charge). See
+  # RazorpayProperties.java for setup steps. Cash on delivery never needs this.
+  razorpay:
+    enabled: ${RAZORPAY_ENABLED:true}
+    key-id: ${RAZORPAY_KEY_ID:YOUR_RAZORPAY_KEY_ID}
+    key-secret: ${RAZORPAY_KEY_SECRET:YOUR_RAZORPAY_KEY_SECRET}
+
+  # Forgot-password emails — disabled by default (logs the reset link
+  # instead of emailing it). See EmailProperties.java for Gmail setup steps.
+  email:
+    enabled: ${EMAIL_ENABLED:true}
+    from: ${EMAIL_FROM:manikumar0459@gmail.com}
+    reset-link-base: ${EMAIL_RESET_LINK_BASE:http://localhost:5500/laundry-app/reset-password.html}
+
+# Only read when app.email.enabled=true — standard Spring Boot mail
+# autoconfiguration picks these up automatically.
+spring.mail:
+  host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+  port: ${SPRING_MAIL_PORT:587}
+  username: ${SPRING_MAIL_USERNAME:YOUR_GMAIL}
+  password: ${SPRING_MAIL_PASSWORD:YOUR_APP_PASSWORD}
+  properties:
+    mail:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+---
+# ===== DEV profile: in-memory H2, auto-creates schema, no setup needed =====
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:dhobigo;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+---
+# ===== PROD profile: MySQL, used via docker-compose / real deployment =====
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/dhobigo?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
