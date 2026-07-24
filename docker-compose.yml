@@ -1,0 +1,57 @@
+# Full-stack local deployment: frontend (nginx) + backend (Spring Boot) + Postgres.
+#
+# Expects this backend folder and the frontend "laundry-app" folder to sit
+# as SIBLINGS on disk, e.g.:
+#   dhobigo/
+#     ├── dhobigo-backend/     (this project)
+#     └── laundry-app/         (the frontend project)
+#
+# Run from inside dhobigo-backend/: docker compose up --build
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: dhobigo
+      MYSQL_USER: dhobigo
+      MYSQL_PASSWORD: dhobigo
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - dhobigo_mysqldata:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:mysql://db:3306/dhobigo?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+      DB_USERNAME: dhobigo
+      DB_PASSWORD: dhobigo
+      # Override with a real random secret before any real deployment
+      JWT_SECRET: change-this-to-a-long-random-string-before-deploying
+    ports:
+      - "8081:8081"
+
+  frontend:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+    volumes:
+      - ../laundry-app:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+
+volumes:
+  dhobigo_mysqldata:
