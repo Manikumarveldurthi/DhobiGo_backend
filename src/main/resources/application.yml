@@ -56,25 +56,14 @@ app:
     key-secret: ${RAZORPAY_KEY_SECRET:YOUR_RAZORPAY_KEY_SECRET}
 
   # Forgot-password emails — disabled by default (logs the reset link
-  # instead of emailing it). See EmailProperties.java for Gmail setup steps.
+  # instead of emailing it). Sent via Resend's HTTP API (not SMTP), since
+  # SMTP ports are blocked outbound on Render's free tier. See
+  # EmailProperties.java for setup steps.
   email:
     enabled: ${EMAIL_ENABLED:true}
-    from: ${EMAIL_FROM:manikumar0459@gmail.com}
+    from: ${EMAIL_FROM:onboarding@resend.dev}
     reset-link-base: ${EMAIL_RESET_LINK_BASE:https://dhobigo.vercel.app/reset-password.html}
-
-# Only read when app.email.enabled=true — standard Spring Boot mail
-# autoconfiguration picks these up automatically.
-spring.mail:
-  host: ${SPRING_MAIL_HOST:smtp.gmail.com}
-  port: ${SPRING_MAIL_PORT:587}
-  username: ${SPRING_MAIL_USERNAME:YOUR_GMAIL}
-  password: ${SPRING_MAIL_PASSWORD:YOUR_APP_PASSWORD}
-  properties:
-    mail:
-      smtp:
-        auth: true
-        starttls:
-          enable: true
+    resend-api-key: ${RESEND_API_KEY:YOUR_RESEND_API_KEY}
 
 springdoc:
   swagger-ui:

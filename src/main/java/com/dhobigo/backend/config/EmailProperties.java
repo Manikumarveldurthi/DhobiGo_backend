@@ -7,21 +7,23 @@ import org.springframework.stereotype.Component;
  * Forgot-password emails. Disabled by default (logs the reset link instead
  * of emailing it) — same safe pattern as WhatsApp/Google/Twilio Verify.
  *
- * Easiest way to get this working: use a Gmail account with an "App
- * Password" (not your normal Gmail password):
- *   1. Enable 2-Step Verification on the Gmail account (required for App
- *      Passwords)
- *   2. Go to myaccount.google.com/apppasswords → generate one for "Mail"
+ * Sent via the Resend HTTP API (https://resend.com) instead of raw SMTP —
+ * SMTP ports (25/465/587) are blocked outbound on Render's free tier, but
+ * Resend's API goes over normal HTTPS (443), so it works there too.
+ *
+ * To go live:
+ *   1. Sign up free at resend.com (no credit card needed)
+ *   2. Dashboard → API Keys → create one, copy it (starts with "re_")
  *   3. Set these environment variables:
  *        EMAIL_ENABLED=true
- *        SPRING_MAIL_HOST=smtp.gmail.com
- *        SPRING_MAIL_PORT=587
- *        SPRING_MAIL_USERNAME=youraddress@gmail.com
- *        SPRING_MAIL_PASSWORD=<the 16-character app password>
- *        EMAIL_FROM=youraddress@gmail.com
+ *        RESEND_API_KEY=re_your_key_here
+ *        EMAIL_FROM=onboarding@resend.dev
  *
- * No business verification needed, unlike WhatsApp — this works within
- * minutes on a normal Gmail account.
+ * NOTE: until you verify your own domain in Resend (Dashboard → Domains),
+ * the sandbox address "onboarding@resend.dev" can only deliver to the
+ * email address you signed up to Resend with. That's fine for testing the
+ * flow yourself; to email real users, verify a domain and set EMAIL_FROM
+ * to an address on it.
  */
 @Component
 @ConfigurationProperties(prefix = "app.email")
@@ -30,7 +32,9 @@ public class EmailProperties {
     private boolean enabled = false;
     private String from = "no-reply@dhobigo.local";
     /** Base URL the reset link points at — your frontend's location. */
-    private String resetLinkBase = "http://localhost:5500/reset-password.html";
+    private String resetLinkBase = "https://dhobigo.vercel.app/reset-password.html";
+    /** Resend API key (starts with "re_"). See resend.com/api-keys. */
+    private String resendApiKey = "re_cB63ixXv_CHngFuVMDVG4KF1m5w2YnMeg";
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
@@ -40,4 +44,7 @@ public class EmailProperties {
 
     public String getResetLinkBase() { return resetLinkBase; }
     public void setResetLinkBase(String resetLinkBase) { this.resetLinkBase = resetLinkBase; }
+
+    public String getResendApiKey() { return resendApiKey; }
+    public void setResendApiKey(String resendApiKey) { this.resendApiKey = resendApiKey; }
 }
