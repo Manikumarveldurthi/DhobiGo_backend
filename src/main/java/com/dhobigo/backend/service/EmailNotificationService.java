@@ -42,7 +42,7 @@ public class EmailNotificationService {
         }
 
         String apiKey = emailProperties.getResendApiKey();
-        if (apiKey == null || apiKey.isBlank() || apiKey.equals("re_cB63ixXv_CHngFuVMDVG4KF1m5w2YnMeg")) {
+        if (apiKey == null || apiKey.isBlank() || apiKey.equals("YOUR_RESEND_API_KEY")) {
             log.warn("Email is enabled but RESEND_API_KEY is not set. Reset link for {}: {}", toEmail, resetLink);
             return;
         }

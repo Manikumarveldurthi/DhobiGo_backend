@@ -34,7 +34,7 @@ public class EmailProperties {
     /** Base URL the reset link points at — your frontend's location. */
     private String resetLinkBase = "https://dhobigo.vercel.app/reset-password.html";
     /** Resend API key (starts with "re_"). See resend.com/api-keys. */
-    private String resendApiKey = "re_cB63ixXv_CHngFuVMDVG4KF1m5w2YnMeg";
+    private String resendApiKey = "YOUR_RESEND_API_KEY";
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
